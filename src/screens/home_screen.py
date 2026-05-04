@@ -19,7 +19,7 @@ def home_screen():
 
     with col1:
         st.markdown("""
-        <h2 style='text-align:center; font-weight:60;'>I'm Student</h2>
+        <h2 style='text-align:center; font-weight:60; color:black !important;'>I'm Student</h2>
         """,    unsafe_allow_html=True)
 
         st.image("student_png.png", width=200)
@@ -30,7 +30,7 @@ def home_screen():
 
     with col2:
         st.markdown("""
-        <h2 style='text-align:center; font-weight:60;'>I'm Teacher</h2>
+        <h2 style='text-align:center; font-weight:60; color:black !important;'>I'm Teacher</h2>
         """,    unsafe_allow_html=True)
 
         
