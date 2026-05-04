@@ -19,8 +19,11 @@ def home_screen():
 
     with col1:
         st.markdown("""
-        <h2 style='text-align:center; font-weight:60; color:black !important;'>I'm Student</h2>
-        """,    unsafe_allow_html=True)
+            <style>
+                .black-text { color: black !important; }
+            </style>
+            <h2 class='black-text' style='text-align:center; font-weight:60;'>I'm Student</h2>
+            """, unsafe_allow_html=True)
 
         st.image("student_png.png", width=200)
         if st.button('Student Portal', type='secondary', icon=':material/arrow_outward:', icon_position='right',width='stretch'):
@@ -30,8 +33,11 @@ def home_screen():
 
     with col2:
         st.markdown("""
-        <h2 style='text-align:center; font-weight:60; color:black !important;'>I'm Teacher</h2>
-        """,    unsafe_allow_html=True)
+            <style>
+                .black-text { color: black !important; }
+            </style>
+            <h2 class='black-text' style='text-align:center; font-weight:60;'>I'm Teacher</h2>
+        """, unsafe_allow_html=True)
 
         
         st.image("teacher_png.png", width=200)
