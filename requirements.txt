@@ -1,28 +1,25 @@
-# utilities
+streamlit
+# Utilitites 
 numpy
 pandas
 
-# Face Recognition
+# FACE RECOGNITION
 scikit-learn
 dlib-bin
-
-# install packages from github
 git+https://github.com/ageitgey/face_recognition_models
 setuptools<70.0.0
 
 # Database
 supabase
-# Password Encryption
 bcrypt
 
-# QR code generation
-segno
 
-# image preprocessing(image upload in python)
+# QR
+segno
 pillow
 
-# Frontend Developer
-streamlit
 
-
-
+# Voice Recognition
+librosa
+resemblyzer
+soundfile 
