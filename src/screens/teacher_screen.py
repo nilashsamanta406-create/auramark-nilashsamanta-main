@@ -159,15 +159,21 @@ def teacher_tab_take_attendance():
                 all_detected_ids = {}
 
                 for idx, img in enumerate(st.session_state.attendance_images):
-                    img_np = np.array(img.convert('RGB'))
-                    detected, _, _ = predict_attendance(img_np)
+                    try:
+                        img_np = np.array(img.convert('RGB'))
+                        detected, _, _, num_faces = predict_attendance(img_np)
 
+                        st.write(f"Photo {idx+1}: faces found={num_faces}, detected IDs={detected}")
 
-                    if detected:
-                        for sid in detected.keys():
-                            student_id = int(sid)
+                        if detected:
+                            for sid in detected.keys():
+                                student_id = int(sid)
 
-                            all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
+                                all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
+
+                    except Exception as e:
+                        st.warning(f"Photo {idx+1} failed: {e}")
+                        continue
 
                 enrolled_res = supabase.table('subject_students').select("*, students(*)").eq('subject_id',selected_subject_id ).execute()
                 enrolled_students = enrolled_res.data
