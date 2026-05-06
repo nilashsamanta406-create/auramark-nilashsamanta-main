@@ -217,7 +217,7 @@ def teacher_tab_manage_subjects():
         for sub in subjects:
             stats = [
                 ("🫂", "Students", sub['total_students']),
-                ("🕰️", "Classes", sub['total_classes']),
+                ("🕰️", "Classes", sub['total_class']),
             ]
         def share_btn():
             if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", icon=":material/share:"):
