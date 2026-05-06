@@ -22,8 +22,6 @@ from src.database.config import supabase
 
 
 from src.components.dialog_voice_attendance import voice_attendance_dialog
-
-
 def teacher_screen():
 
     style_background_dashboard()
@@ -94,22 +92,12 @@ def teacher_dashboard():
     footer_dashboard()
 
 def teacher_tab_take_attendance():
-    
-
     teacher_id = st.session_state.teacher_data['teacher_id']
-    st.markdown("""
-        <h2 style='text-align:center; font-weight:60;'>Take AI Attendance</h2>
-        """,    unsafe_allow_html=True)
+    st.header('Take AI Attendance')
 
 
     if 'attendance_images' not in st.session_state:
         st.session_state.attendance_images = []
-    if 'show_add_photos' not in st.session_state:
-        st.session_state.show_add_photos = False
-    if 'attendance_results' not in st.session_state:
-        st.session_state.attendance_results = None
-    if 'attendance_to_log' not in st.session_state:
-        st.session_state.attendance_to_log = None
 
     subjects = get_teacher_subjects(teacher_id)
 
@@ -126,10 +114,7 @@ def teacher_tab_take_attendance():
 
     with col2:
         if st.button('Add Photos', type='primary', icon=':material/photo_prints:', width='stretch'):
-            st.session_state.show_add_photos = True
-            st.session_state.attendance_results = None
-            st.rerun()
-
+            add_photos_dialog()
 
     selected_subject_id = subject_options[selected_subject_label]
 
@@ -143,14 +128,11 @@ def teacher_tab_take_attendance():
             with gallery_cols[idx % 4 ]:
                 st.image(img, width='stretch', caption=f'Photo {idx+1}')
     has_photos = bool(st.session_state.attendance_images)
-
     c1, c2, c3 = st.columns(3)
 
     with c1:
         if st.button('Clear all photos', width='stretch', type='tertiary', icon=':material/delete:', disabled=not has_photos):
             st.session_state.attendance_images = []
-            st.session_state.attendance_results = None
-            st.session_state.attendance_to_log = None
             st.rerun()
 
 
@@ -161,21 +143,15 @@ def teacher_tab_take_attendance():
                 all_detected_ids = {}
 
                 for idx, img in enumerate(st.session_state.attendance_images):
-                    try:
-                        img_np = np.array(img.convert('RGB'))
-                        detected, _,num_faces = predict_attendance(img_np)
+                    img_np = np.array(img.convert('RGB'))
+                    detected, _, _ = predict_attendance(img_np)
 
-                        st.write(f"Photo {idx+1}: faces found={num_faces}, detected IDs={detected}")
 
-                        if detected:
-                            for sid in detected.keys():
-                                student_id = int(sid)
+                    if detected:
+                        for sid in detected.keys():
+                            student_id = int(sid)
 
-                                all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
-
-                    except Exception as e:
-                        st.warning(f"Photo {idx+1} failed: {e}")
-                        continue
+                            all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
 
                 enrolled_res = supabase.table('subject_students').select("*, students(*)").eq('subject_id',selected_subject_id ).execute()
                 enrolled_students = enrolled_res.data
@@ -208,25 +184,13 @@ def teacher_tab_take_attendance():
                             'is_present': bool(is_present)
                         })
 
-               
+                attendance_result_dialog(pd.DataFrame(results), attendance_to_log)
 
-                    st.session_state.attendance_results = results
-                    st.session_state.attendance_to_log = attendance_to_log
-                    st.rerun()
-
-    # Only one dialog opens at a time
-    if st.session_state.show_add_photos:
-        st.session_state.show_add_photos = False
-        add_photos_dialog()
-
-    elif st.session_state.attendance_results is not None:
-        attendance_result_dialog(
-            pd.DataFrame(st.session_state.attendance_results),
-            st.session_state.attendance_to_log
-        )
     with c3:
         if st.button('Use Voice Attendance', type='primary', width='stretch', icon=':material/mic:'):
             voice_attendance_dialog(selected_subject_id)
+
+
 
 
 
@@ -240,9 +204,7 @@ def teacher_tab_manage_subjects():
     teacher_id = st.session_state.teacher_data['teacher_id']
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("""
-        <h2 style='text-align:center; font-weight:60;'>Manage Subjects</h2>
-        """,    unsafe_allow_html=True)
+        st.header('Manage Subjects', width='stretch')
 
     with col2:
         if st.button('Create New Subject', width='stretch'):
@@ -255,7 +217,7 @@ def teacher_tab_manage_subjects():
         for sub in subjects:
             stats = [
                 ("🫂", "Students", sub['total_students']),
-                ("🕰️", "Classes", sub['total_class']),
+                ("🕰️", "Classes", sub['total_classes']),
             ]
         def share_btn():
             if st.button(f"Share Code: {sub['name']}", key=f"share_{sub['subject_code']}", icon=":material/share:"):
@@ -274,9 +236,7 @@ def teacher_tab_manage_subjects():
 
 
 def teacher_tab_attendance_records():
-    st.markdown("""
-        <h2 style='text-align:center; font-weight:60;'>Attendance Records</h2>
-        """,    unsafe_allow_html=True)
+    st.header('Attendance Records')
 
     teacher_id = st.session_state.teacher_data['teacher_id']
 
@@ -347,14 +307,12 @@ def teacher_screen_login():
             st.session_state['login_type'] = None
             st.rerun()
 
-    st.markdown("""
-    <h2 style='text-align:center; font-weight:60; '>Login using password</h2>
-    """, unsafe_allow_html=True)
+    st.header('Login using password', text_alignment='center')
     st.space()
     st.space()
 
 
-    teacher_username = st.text_input("Enter username", placeholder='Username')
+    teacher_username = st.text_input("Enter username", placeholder='ananyaroy')
 
     teacher_pass = st.text_input("Enter password", type='password', placeholder="Enter password")
 
@@ -406,17 +364,15 @@ def teacher_screen_register():
 
 
 
-    st.markdown("""
-    <h2 style='text-align:center; font-weight:60; letter-spacing:1px;'>Register your teacher profile</h2>
-    """, unsafe_allow_html=True)
+    st.header('Register your teacher profile')
 
     st.space()
     st.space()
 
     
-    teacher_username = st.text_input("Enter username", placeholder='Username')
+    teacher_username = st.text_input("Enter username", placeholder='ananyaroy')
 
-    teacher_name = st.text_input("Enter name", placeholder='Name')
+    teacher_name = st.text_input("Enter name", placeholder='Ananya Roy')
 
     teacher_pass = st.text_input("Enter password", type='password', placeholder="Enter password")
 
