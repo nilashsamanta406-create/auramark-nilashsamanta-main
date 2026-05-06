@@ -39,8 +39,18 @@ def get_face_embeddings(image_np):
     return encodings
 
 
+def get_student_count():
+    """Returns number of students with face embeddings — used as cache key"""
+    student_db = get_all_students()
+    return len([s for s in student_db if s.get('face_embedding')])
+
+
 @st.cache_resource
-def get_trained_model():
+def get_trained_model(_student_count):
+    """
+    Trains SVM classifier on all students with face embeddings.
+    Cache invalidates automatically when student count changes.
+    """
     X = []
     y = []
 
@@ -74,19 +84,28 @@ def get_trained_model():
 
 
 def train_classifier():
+    """Force clears cache and retrains model"""
     st.cache_resource.clear()
-    model_data = get_trained_model()
+    count = get_student_count()
+    model_data = get_trained_model(count)
     return bool(model_data)
 
 
 def predict_attendance(class_image_np):
+    """
+    Used by teacher for bulk attendance from class photo.
+    Returns detected students, all student IDs, and face count.
+    """
     encodings = get_face_embeddings(class_image_np)
     detected_students = {}
 
     if not encodings:
         return detected_students, [], 0
 
-    model_data = get_trained_model()
+    # ✅ Cache invalidates when new student registers
+    count = get_student_count()
+    model_data = get_trained_model(count)
+
     if not model_data:
         return detected_students, [], len(encodings)
 
@@ -98,8 +117,8 @@ def predict_attendance(class_image_np):
     all_students = sorted(list(set(y_train)))
 
     # ✅ Tunable thresholds
-    DISTANCE_THRESHOLD = 0.45   # lower = stricter face match
-    CONFIDENCE_THRESHOLD = 0.75  # lower = more lenient SVM confidence
+    DISTANCE_THRESHOLD = 0.55   # increase if too strict, decrease if too lenient
+    CONFIDENCE_THRESHOLD = 0.65  # increase if too strict, decrease if too lenient
 
     for encoding in encodings:
         # ✅ Step 1: Find closest match by distance across ALL students
@@ -114,21 +133,21 @@ def predict_attendance(class_image_np):
 
         # ✅ Step 2: Reject if distance too high (unknown face)
         if best_score > DISTANCE_THRESHOLD:
-            continue  # face doesn't match anyone
+            continue
 
-        # ✅ Step 3: SVM confidence check (skip for single student)
+        # ✅ Step 3: SVM confidence check
         if not single_student:
             predicted_id = int(clf.predict([encoding])[0])
             proba = clf.predict_proba([encoding])[0]
             confidence = max(proba)
 
-            # ✅ Reject if SVM not confident enough
+            # ✅ Reject if not confident enough
             if confidence < CONFIDENCE_THRESHOLD:
-                continue  # uncertain prediction, treat as unknown
+                continue
 
             # ✅ Step 4: Both SVM and distance must agree
             if predicted_id != best_id:
-                continue  # disagreement = unknown face
+                continue
         else:
             predicted_id = int(all_students[0])
 
@@ -139,7 +158,13 @@ def predict_attendance(class_image_np):
 
 def predict_login(image_np):
     """
-    For single student login — returns student_id or None
+    Used for single student face login.
+    Returns (student_id, status) where status is:
+    - 'success' → face matched
+    - 'unknown' → face not recognized
+    - 'no_face' → no face detected
+    - 'multiple_faces' → more than one face
+    - 'no_model' → no students registered
     """
     encodings = get_face_embeddings(image_np)
 
@@ -150,20 +175,26 @@ def predict_login(image_np):
         return None, "multiple_faces"
 
     encoding = encodings[0]
-    model_data = get_trained_model()
+
+    # ✅ Cache invalidates when new student registers
+    count = get_student_count()
+    model_data = get_trained_model(count)
 
     if not model_data:
         return None, "no_model"
 
+    clf = model_data['clf']
     X_train = model_data['X']
     y_train = model_data['y']
-    clf = model_data['clf']
     single_student = model_data.get('single_student', False)
 
-    DISTANCE_THRESHOLD = 0.45
-    CONFIDENCE_THRESHOLD = 0.75
+    all_students = sorted(list(set(y_train)))
 
-    # ✅ Find closest match by distance
+    # ✅ Tunable thresholds
+    DISTANCE_THRESHOLD = 0.55
+    CONFIDENCE_THRESHOLD = 0.65
+
+    # ✅ Step 1: Find closest match by distance
     best_score = float('inf')
     best_id = None
 
@@ -173,24 +204,25 @@ def predict_login(image_np):
             best_score = dist
             best_id = trained_id
 
-    # ✅ Reject unknown face
+    # ✅ Step 2: Reject unknown face
     if best_score > DISTANCE_THRESHOLD:
         return None, "unknown"
 
-    # ✅ SVM confidence check
+    # ✅ Step 3: SVM confidence check
     if not single_student:
         predicted_id = int(clf.predict([encoding])[0])
         proba = clf.predict_proba([encoding])[0]
         confidence = max(proba)
 
+        # ✅ Reject if not confident
         if confidence < CONFIDENCE_THRESHOLD:
             return None, "unknown"
 
+        # ✅ Both must agree
         if predicted_id != best_id:
             return None, "unknown"
     else:
-
-        all_students = sorted(list(set(y_train)))  # ✅ define it here
+        all_students = sorted(list(set(y_train)))
         predicted_id = int(all_students[0])
 
     return predicted_id, "success"
