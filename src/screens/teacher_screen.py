@@ -161,7 +161,7 @@ def teacher_tab_take_attendance():
                 for idx, img in enumerate(st.session_state.attendance_images):
                     try:
                         img_np = np.array(img.convert('RGB'))
-                        detected, _, _, num_faces = predict_attendance(img_np)
+                        detected, _,num_faces = predict_attendance(img_np)
 
                         st.write(f"Photo {idx+1}: faces found={num_faces}, detected IDs={detected}")
 
