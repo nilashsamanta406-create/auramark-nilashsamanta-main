@@ -117,8 +117,8 @@ def predict_attendance(class_image_np):
     all_students = sorted(list(set(y_train)))
 
     # ✅ Tunable thresholds
-    DISTANCE_THRESHOLD = 0.7   # increase if too strict, decrease if too lenient
-    CONFIDENCE_THRESHOLD = 0.5  # increase if too strict, decrease if too lenient
+    DISTANCE_THRESHOLD = 0.8  # increase if too strict, decrease if too lenient
+    CONFIDENCE_THRESHOLD = 0.4  # increase if too strict, decrease if too lenient
 
     for encoding in encodings:
         # ✅ Step 1: Find closest match by distance across ALL students
@@ -133,21 +133,9 @@ def predict_attendance(class_image_np):
 
         # ✅ Step 2: Reject if distance too high (unknown face)
         if best_score > DISTANCE_THRESHOLD:
+            detected_students[int(best_id)] = True
             continue
 
-        # ✅ Step 3: SVM confidence check
-        if not single_student:
-            predicted_id = int(clf.predict([encoding])[0])
-            proba = clf.predict_proba([encoding])[0]
-            confidence = max(proba)
-
-            # ✅ Reject if not confident enough
-            if confidence < CONFIDENCE_THRESHOLD:
-                continue
-
-            # ✅ Step 4: Both SVM and distance must agree
-            if predicted_id != best_id:
-                continue
         else:
             predicted_id = int(all_students[0])
 
@@ -191,8 +179,8 @@ def predict_login(image_np):
     all_students = sorted(list(set(y_train)))
 
     # ✅ Tunable thresholds
-    DISTANCE_THRESHOLD = 0.7
-    CONFIDENCE_THRESHOLD = 0.5
+    DISTANCE_THRESHOLD = 0.8
+    CONFIDENCE_THRESHOLD = 0.4
 
     # ✅ Step 1: Find closest match by distance
     best_score = float('inf')

@@ -94,6 +94,11 @@ def teacher_dashboard():
     footer_dashboard()
 
 def teacher_tab_take_attendance():
+    if st.button('🔄 Force Refresh Model', type='tertiary'):
+        st.cache_resource.clear()
+        st.success("Model cleared! Try again.")
+        st.rerun()
+
     teacher_id = st.session_state.teacher_data['teacher_id']
     st.markdown("""
         <h2 style='text-align:center; font-weight:60;'>Take AI Attendance</h2>
