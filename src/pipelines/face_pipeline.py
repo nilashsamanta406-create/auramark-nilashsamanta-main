@@ -210,7 +210,7 @@ def predict_login(image_np):
         if predicted_id != best_id:
             return None, "unknown"
     else:
-        all_students = sorted(list(set(y_train)))
+        
         predicted_id = int(all_students[0])
 
     return predicted_id, "success"
