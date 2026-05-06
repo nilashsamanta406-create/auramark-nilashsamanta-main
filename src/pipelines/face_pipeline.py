@@ -117,8 +117,8 @@ def predict_attendance(class_image_np):
     all_students = sorted(list(set(y_train)))
 
     # ✅ Tunable thresholds
-    DISTANCE_THRESHOLD = 0.55   # increase if too strict, decrease if too lenient
-    CONFIDENCE_THRESHOLD = 0.65  # increase if too strict, decrease if too lenient
+    DISTANCE_THRESHOLD = 0.7   # increase if too strict, decrease if too lenient
+    CONFIDENCE_THRESHOLD = 0.5  # increase if too strict, decrease if too lenient
 
     for encoding in encodings:
         # ✅ Step 1: Find closest match by distance across ALL students
@@ -191,8 +191,8 @@ def predict_login(image_np):
     all_students = sorted(list(set(y_train)))
 
     # ✅ Tunable thresholds
-    DISTANCE_THRESHOLD = 0.55
-    CONFIDENCE_THRESHOLD = 0.65
+    DISTANCE_THRESHOLD = 0.7
+    CONFIDENCE_THRESHOLD = 0.5
 
     # ✅ Step 1: Find closest match by distance
     best_score = float('inf')
